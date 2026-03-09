@@ -27,8 +27,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Config
-@Autonomous(name = "Full NearBlue", group = "Autonomous")
-public class NearBlue extends LinearOpMode {
+@Autonomous(name = "Full FarBlue", group = "Autonomous")
+public class FarBlue extends LinearOpMode {
     DcMotor intakeMotor, leftHoodMotor, rightHoodMotor;
     CRServo transferServo;
 
@@ -77,8 +77,8 @@ public class NearBlue extends LinearOpMode {
     public class shooterOn implements InstantFunction {
         @Override
         public void run() {
-            leftHoodMotor.setPower(.69);
-            rightHoodMotor.setPower(.69);
+            leftHoodMotor.setPower(.83);
+            rightHoodMotor.setPower(.83);
         }
     }
     public class shooterOff implements InstantFunction {
@@ -98,19 +98,19 @@ public class NearBlue extends LinearOpMode {
         double spinWait = 1.5; //TODO: Tune spinWait, change to 1 if needed
         double intakeWait = 2.4; //TODO: Tune intakeWait
         double balltakeWait = 0;
-        double balltakeVelContraint = 35; // 80 = regular velocity
+        double balltakeVelContraint = 65; // 80 = regular velocity
 
-        Pose2d initialPose = new Pose2d(-50, -50, Math.toRadians(-126));
+        Pose2d initialPose = new Pose2d(61, -21, Math.toRadians(-180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
         waitForStart();
 
         Action path = drive.actionBuilder(initialPose)
-                .stopAndAdd(new shooterOn())
-                .strafeTo(new Vector2d(-16, -13)) // go to shooting zone
+                .stopAndAdd(new shooterOn()) // change if needed to .afterDisp
+                .strafeToLinearHeading(new Vector2d(52, -13.5), Math.toRadians(-152)) // go to shooting zone
                 //  .afterDisp(0, new shooterOn())
                 //TODO: Tune wait for spin-up
-                .waitSeconds(0.75) // wait for spin-up
+                .waitSeconds(spinWait) // wait for spin-up
                 .stopAndAdd(new SequentialAction (
                         new InstantAction(new intakeOn()),
                         //TODO: Tune intake time
@@ -120,14 +120,15 @@ public class NearBlue extends LinearOpMode {
                         new InstantAction(new shooterOff())
                 ))
 
-                .strafeToLinearHeading(new Vector2d(-3, -15), Math.toRadians(-88))
+                .strafeToLinearHeading(new Vector2d(34, -16), Math.toRadians(-90))
                 .waitSeconds(balltakeWait)// travel to the front of 1st row of artifacts
                 .afterDisp(0, new balltakeOn()) // turn on intake
-                .strafeTo(new Vector2d(-3, -57), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
+                .strafeTo(new Vector2d(32, -54), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
-                .strafeToLinearHeading(new Vector2d(-16, -13), Math.toRadians(-137)) // travel to shooting zone
+                .stopAndAdd(new shooterOn()) // change if needed to .afterDisp
+                .strafeToLinearHeading(new Vector2d(52, -13.5), Math.toRadians(-152)) // travel to shooting zone
 
-                .afterDisp(0, new shooterOn())
+                //  .afterDisp(0, new shooterOn())
                 //TODO: Tune wait for spin-up
                 .waitSeconds(spinWait) // wait for spin-up
                 .stopAndAdd(new SequentialAction (
@@ -139,18 +140,15 @@ public class NearBlue extends LinearOpMode {
                         new InstantAction(new shooterOff())
                 ))
 
-                .strafeToLinearHeading(new Vector2d(27.5, -12.8), Math.toRadians(-87.5))
-                .waitSeconds(balltakeWait)
+                .strafeToLinearHeading(new Vector2d(43, -60), Math.toRadians(-180))
+                .waitSeconds(balltakeWait)// travel to the front of 1st row of artifacts
                 .afterDisp(0, new balltakeOn()) // turn on intake
-                .strafeTo(new Vector2d(26, -53.5 ), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
+                .strafeTo((new Vector2d(47, -60)), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
-                //  .setTangent(Math.toRadians(110))
-                //   .splineToConstantHeading(new Vector2d(7, 53), Math.toRadians(160)) // trigger gate
-                .setTangent(Math.toRadians(-140))
-                .splineToLinearHeading(new Pose2d(-16, -13, Math.toRadians(-136.7)), Math.toRadians(165)) // travel to shooting zone
+                .stopAndAdd(new shooterOn()) // change if needed to .afterDisp
+                .strafeToLinearHeading(new Vector2d(52, -13.5), Math.toRadians(-152)) // travel to shooting zone
 
-                // SHOOTING SEQUENCE
-                .afterDisp(0, new shooterOn())
+                //  .afterDisp(0, new shooterOn())
                 //TODO: Tune wait for spin-up
                 .waitSeconds(spinWait) // wait for spin-up
                 .stopAndAdd(new SequentialAction (
@@ -161,27 +159,6 @@ public class NearBlue extends LinearOpMode {
                         new InstantAction(new intakeOff()),
                         new InstantAction(new shooterOff())
                 ))
-
-               .strafeToLinearHeading(new Vector2d(52, -8), Math.toRadians(-87))
-                /* .waitSeconds(balltakeWait)
-                .afterDisp(0, new balltakeOn()) // turn on intake
-                .strafeTo(new Vector2d(50, -55), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
-                .afterDisp(0, new balltakeOff()) // turn off intake */
-
-                //   .setTangent(Math.toRadians(-140))
-                /*  .strafeToLinearHeading(new Vector2d(-12, 13), Math.toRadians(126))
-
-                  .afterDisp(0, new shooterOn())
-                  .stopAndAdd(new SequentialAction (
-                          new InstantAction(new intakeOn()),
-                          //TODO: Tune intake time
-                          new SleepAction(intakeWait), // Feed long enough to shoot
-                          // STOP INTAKE & FLYWHEEL
-                          new InstantAction(new intakeOff()),
-                          new InstantAction(new shooterOff())
-                  ))
-
-               //   .strafeToLinearHeading(new Vector2d(7, 30), Math.toRadians(45)) */
 
                 .build();
 
