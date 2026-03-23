@@ -4,9 +4,6 @@ import com.seattlesolvers.solverslib.util.InterpLUT;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * Distance -> hood servo position lookup using SolversLib InterpLUT.
- *
- * Input: distance to depot/goal (in the same units as your RR field, usually inches)
  * Output: servo position for both hood servos (0.0 to 1.0)
  */
 public class HoodLookupTable {
@@ -32,7 +29,7 @@ public class HoodLookupTable {
     public HoodLookupTable() {
         // TODO: REPLACE these sample calibration points with your real measured values.
         // Distance = inches
-        // Format: add(distance, servoPosition)
+        // Format: add(distance, servoPosition offset)
         servoLut.add(20.0, 0.25);
         servoLut.add(30.0, 0.34);
         servoLut.add(40.0, 0.43);
