@@ -27,7 +27,6 @@ public class HoodLookupTable {
     }
 
     public HoodLookupTable() {
-        // TODO: REPLACE these sample calibration points with your real measured values.
         // Distance = inches
         // Format: add(distance, servoPosition offset)
         servoLut.add(20.0, 0.25);
