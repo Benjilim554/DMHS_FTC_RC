@@ -26,7 +26,7 @@ You should increase it until it begins to move and then decrease it until it sto
 gets there.
 3) Tune P. Send a ball through the launcher and increase P until it doesn't overshoot past the target
 velocity in the recovery phase. Keep increasing though because unless you see overshoot you're fine.
-4) Tune I. After all the other numbers are tuned, save them, and then make kS slightly negative.
+4) Tune I. After all the other numbers are tuned, save them, and then make kS slightly negative (-).
 This will simulate a drop in power to the motor from a low battery. Increase I until your confident
 that you can still get to your target velocity.
 

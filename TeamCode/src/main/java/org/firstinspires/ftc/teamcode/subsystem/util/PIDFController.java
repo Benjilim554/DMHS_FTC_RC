@@ -8,7 +8,8 @@ public class PIDFController {
     private double kP, kI, kD, kF, kV, kA, kS;
 
     // Timing + state tracking
-    private double lastTime_sec, period;
+    private double period;
+    private long lastTime_ns;
     private double errorDelta, lastError, compoundedI;
 
     public PIDFController(double kP, double kI, double kD, double kF, double kV, double kA, double kS) {
@@ -55,7 +56,7 @@ public class PIDFController {
     // I term: accumulates error over time (clamped to prevent windup)
     private double integral(double error) {
         compoundedI += period * error;
-        compoundedI = Range.clip(compoundedI, -1.0, 1.0);
+        compoundedI = Math.min(Math.max(compoundedI, -1.0), 1.0);
         return compoundedI * kI;
     }
 
@@ -85,10 +86,17 @@ public class PIDFController {
 
     // Updates loop period using system time
     private void updateTime() {
-        double currentTime_sec = System.nanoTime() / 1E9;
-        if (lastTime_sec == 0) lastTime_sec = currentTime_sec;
-        period = currentTime_sec - lastTime_sec;
-        lastTime_sec = currentTime_sec;
+        long currentTime_ns = System.nanoTime();
+
+        if (lastTime_ns == 0) {
+            lastTime_ns = currentTime_ns;
+        }
+
+        long delta_ns = currentTime_ns - lastTime_ns;
+
+        period = (double) delta_ns / 1E9;
+
+        lastTime_ns = currentTime_ns;
     }
 
     // Update PIDF gains at runtime
@@ -114,5 +122,6 @@ public class PIDFController {
         this.kS = kS;
     }
 }
+
 
 

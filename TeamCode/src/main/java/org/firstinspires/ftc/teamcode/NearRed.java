@@ -1,9 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
-import androidx.annotation.NonNull;
-
 
 // RR-specific imports
 import com.acmerobotics.dashboard.config.Config;
@@ -21,16 +17,23 @@ import com.acmerobotics.roadrunner.InstantFunction;
 // Non-RR imports
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.subsystem.util.PoseStorage;
 
 @Config
 @Autonomous(name = "Full NearRed", group = "Autonomous")
 public class NearRed extends LinearOpMode {
     DcMotor intakeMotor, leftHoodMotor, rightHoodMotor;
     CRServo transferServo;
+    Servo axonPowerLeft, axonPowerRight;
+
+    AnalogInput leftEncoderServo, rightEncoderServo;
 
     // INTAKE ON & OFF
     public class intakeOn implements InstantFunction {
@@ -88,12 +91,46 @@ public class NearRed extends LinearOpMode {
             rightHoodMotor.setPower(-.2);
         }
     }
+    public class HoodRelativePosition implements InstantFunction {
+        private final double offset;
+
+        public HoodRelativePosition(double offset) {
+            this.offset = offset;
+        }
+
+        @Override
+        public void run() {
+            double leftTarget = PoseStorage.leftServoStartPosition + offset;
+            double rightTarget = PoseStorage.rightServoStartPosition + offset;
+
+            // clip to legal servo range
+            leftTarget = Math.max(0.0, Math.min(1.0, leftTarget));
+            rightTarget = Math.max(0.0, Math.min(1.0, rightTarget));
+
+            axonPowerLeft.setPosition(leftTarget);
+            axonPowerRight.setPosition(rightTarget);
+        }
+    }
+    public class returnToOriginalHoodPosition implements InstantFunction {
+        @Override
+        public void run() {
+            axonPowerLeft.setPosition(PoseStorage.leftServoStartPosition);
+            axonPowerRight.setPosition(PoseStorage.rightServoStartPosition);
+        }
+    }
 
     public void runOpMode() throws InterruptedException {
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         leftHoodMotor = hardwareMap.get(DcMotor.class, "leftHoodMotor");
         rightHoodMotor = hardwareMap.get(DcMotor.class, "rightHoodMotor");
         transferServo = hardwareMap.get(CRServo.class, "transferServo");
+        axonPowerLeft = hardwareMap.get(Servo.class, "axonPowerLeft");
+        axonPowerRight = hardwareMap.get(Servo.class, "axonPowerRight");
+        leftEncoderServo = hardwareMap.get(AnalogInput.class, "leftServoEncoder");
+        rightEncoderServo = hardwareMap.get(AnalogInput.class, "rightServoEncoder");
+
+        axonPowerRight.setDirection(Servo.Direction.REVERSE);
+
 
         double spinWait = 1.5; //TODO: Tune spinWait, change to 1 if needed
         double intakeWait = 2.4; //TODO: Tune intakeWait
@@ -103,10 +140,17 @@ public class NearRed extends LinearOpMode {
         Pose2d initialPose = new Pose2d(-50, 50, Math.toRadians(126));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
+        if (isStopRequested()) return;
+        PoseStorage.leftServoStartPosition = axonPowerLeft.getPosition();
+        PoseStorage.rightServoStartPosition = axonPowerRight.getPosition();
+
         waitForStart();
+
+        telemetry.update();
 
         Action path = drive.actionBuilder(initialPose)
                 .stopAndAdd(new shooterOn())
+                .afterDisp(0, new HoodRelativePosition(0.7))
                 .strafeTo(new Vector2d(-16, 13)) // go to shooting zone
               //  .afterDisp(0, new shooterOn())
                  //TODO: Tune wait for spin-up
@@ -142,7 +186,7 @@ public class NearRed extends LinearOpMode {
                 .strafeToLinearHeading(new Vector2d(27.5, 12.8), Math.toRadians(87.5))
                 .waitSeconds(balltakeWait)
                 .afterDisp(0, new balltakeOn()) // turn on intake
-                .strafeTo(new Vector2d(26, 53.5 ), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
+                .strafeTo(new Vector2d(26, 53.5), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
               //  .setTangent(Math.toRadians(110))
              //   .splineToConstantHeading(new Vector2d(7, 53), Math.toRadians(160)) // trigger gate
@@ -167,6 +211,7 @@ public class NearRed extends LinearOpMode {
                 .afterDisp(0, new balltakeOn()) // turn on intake
                 .strafeTo(new Vector2d(50, 55), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
+                .stopAndAdd(new returnToOriginalHoodPosition())
 
              //   .setTangent(Math.toRadians(-140))
               /*  .strafeToLinearHeading(new Vector2d(-12, 13), Math.toRadians(126))
@@ -186,5 +231,6 @@ public class NearRed extends LinearOpMode {
                 .build();
 
         Actions.runBlocking(new SequentialAction(path));
+        PoseStorage.currentPose = drive.localizer.getPose();
     }
 }
