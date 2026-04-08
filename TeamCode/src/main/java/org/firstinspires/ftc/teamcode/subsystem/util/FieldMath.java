@@ -9,6 +9,7 @@ public class FieldMath {
         BLUE
     }
 
+    // coordinates of Red & Blue Depot Zones
     private static final double RED_DEPOT_X = 55;
     private static final double RED_DEPOT_Y = 57;
 

@@ -91,33 +91,6 @@ public class NearRed extends LinearOpMode {
             rightHoodMotor.setPower(-.2);
         }
     }
-    public class HoodRelativePosition implements InstantFunction {
-        private final double offset;
-
-        public HoodRelativePosition(double offset) {
-            this.offset = offset;
-        }
-
-        @Override
-        public void run() {
-            double leftTarget = PoseStorage.leftServoStartPosition + offset;
-            double rightTarget = PoseStorage.rightServoStartPosition + offset;
-
-            // clip to legal servo range
-            leftTarget = Math.max(0.0, Math.min(1.0, leftTarget));
-            rightTarget = Math.max(0.0, Math.min(1.0, rightTarget));
-
-            axonPowerLeft.setPosition(leftTarget);
-            axonPowerRight.setPosition(rightTarget);
-        }
-    }
-    public class returnToOriginalHoodPosition implements InstantFunction {
-        @Override
-        public void run() {
-            axonPowerLeft.setPosition(PoseStorage.leftServoStartPosition);
-            axonPowerRight.setPosition(PoseStorage.rightServoStartPosition);
-        }
-    }
 
     public void runOpMode() throws InterruptedException {
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
@@ -140,17 +113,16 @@ public class NearRed extends LinearOpMode {
         Pose2d initialPose = new Pose2d(-50, 50, Math.toRadians(126));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-        if (isStopRequested()) return;
-        PoseStorage.leftServoStartPosition = axonPowerLeft.getPosition();
-        PoseStorage.rightServoStartPosition = axonPowerRight.getPosition();
-
         waitForStart();
 
         telemetry.update();
 
         Action path = drive.actionBuilder(initialPose)
                 .stopAndAdd(new shooterOn())
-                .afterDisp(0, new HoodRelativePosition(0.7))
+                .afterDisp(0, new InstantAction(() -> {
+                    axonPowerLeft.setPosition(0.55);
+                    axonPowerRight.setPosition(0.55);
+                }))
                 .strafeTo(new Vector2d(-16, 13)) // go to shooting zone
               //  .afterDisp(0, new shooterOn())
                  //TODO: Tune wait for spin-up
@@ -211,7 +183,10 @@ public class NearRed extends LinearOpMode {
                 .afterDisp(0, new balltakeOn()) // turn on intake
                 .strafeTo(new Vector2d(50, 55), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
-                .stopAndAdd(new returnToOriginalHoodPosition())
+                .afterDisp(0, new InstantAction(() -> {
+                    axonPowerLeft.setPosition(0);
+                    axonPowerRight.setPosition(0);
+                  }))
 
              //   .setTangent(Math.toRadians(-140))
               /*  .strafeToLinearHeading(new Vector2d(-12, 13), Math.toRadians(126))

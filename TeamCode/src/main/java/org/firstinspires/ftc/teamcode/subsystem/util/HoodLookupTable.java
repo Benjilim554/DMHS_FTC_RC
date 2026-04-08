@@ -11,19 +11,12 @@ public class HoodLookupTable {
     private final InterpLUT servoLut = new InterpLUT();
 
     // Safety clamp for servo positions
-    private static final double MIN_POS = 0.0;
-    private static final double MAX_POS = 1.0;
-
     public double getLeftServoPosition(double distance) {
-        double offset = servoLut.get(distance);
-        double finalPos = PoseStorage.leftServoStartPosition + offset;
-        return Range.clip(finalPos, MIN_POS, MAX_POS);
+        return Range.clip(servoLut.get(distance), 0.0, 1.0);
     }
 
     public double getRightServoPosition(double distance) {
-        double offset = servoLut.get(distance);
-        double finalPos = PoseStorage.rightServoStartPosition + offset;
-        return Range.clip(finalPos, MIN_POS, MAX_POS);
+        return Range.clip(servoLut.get(distance), 0.0, 1.0);
     }
 
     public HoodLookupTable() {
