@@ -10,11 +10,11 @@ public class FieldMath {
     }
 
     // coordinates of Red & Blue Depot Zones
-    private static final double RED_DEPOT_X = 55;
+    private static final double RED_DEPOT_X = -55;
     private static final double RED_DEPOT_Y = 57;
 
-    private static final double BLUE_DEPOT_X = -58;
-    private static final double BLUE_DEPOT_Y = -54;
+    private static final double BLUE_DEPOT_X = -55;
+    private static final double BLUE_DEPOT_Y = -57;
 
     public static double distanceToDepot(Pose2d pose, double offsetX, Alliance alliance) {
         double targetX;
@@ -28,7 +28,6 @@ public class FieldMath {
             targetY = BLUE_DEPOT_Y;
         }
 
-        double heading = pose.heading.toDouble();
 
         double adjustedX = pose.position.x + offsetX;
         double adjustedY = pose.position.y;

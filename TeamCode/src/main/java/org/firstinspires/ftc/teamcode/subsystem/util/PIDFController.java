@@ -98,6 +98,14 @@ public class PIDFController {
 
         lastTime_ns = currentTime_ns;
     }
+    // Reset
+    public void reset() {
+        period = 0;
+        lastTime_ns = 0;
+        errorDelta = 0;
+        lastError = 0;
+        compoundedI = 0;
+    }
 
     // Update PIDF gains at runtime
     public void setPIDF(double kP, double kI, double kD, double kF) {

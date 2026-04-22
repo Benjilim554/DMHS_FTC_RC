@@ -30,7 +30,7 @@ import org.firstinspires.ftc.teamcode.subsystem.util.PoseStorage;
 @Autonomous(name = "Full NearRed", group = "Autonomous")
 public class NearRed extends LinearOpMode {
     DcMotor intakeMotor, leftHoodMotor, rightHoodMotor;
-    CRServo transferServo;
+    DcMotor transferMotor;
     Servo axonPowerLeft, axonPowerRight;
 
     AnalogInput leftEncoderServo, rightEncoderServo;
@@ -40,21 +40,21 @@ public class NearRed extends LinearOpMode {
         @Override
         public void run() {
             intakeMotor.setPower(-1);
-            transferServo.setPower(1);
+            transferMotor.setPower(1);
         }
     }
     public class ballIntake implements InstantFunction {
         @Override
         public void run() {
             intakeMotor.setPower(-1);
-            transferServo.setPower(-1);
+            transferMotor.setPower(-1);
         }
     }
     public class intakeOff implements InstantFunction {
         @Override
         public void run() {
             intakeMotor.setPower(0);
-            transferServo.setPower(0);
+            transferMotor.setPower(0);
         }
     }
     // BALL INTAKE ON & OFF (lower power intakeMotor)
@@ -62,7 +62,7 @@ public class NearRed extends LinearOpMode {
         @Override
         public void run() {
             intakeMotor.setPower(-.7);
-            transferServo.setPower(-1);
+            transferMotor.setPower(-1);
             leftHoodMotor.setPower(-0.1);
             rightHoodMotor.setPower(-0.1);
         }
@@ -71,7 +71,7 @@ public class NearRed extends LinearOpMode {
         @Override
         public void run() {
             intakeMotor.setPower(0);
-            transferServo.setPower(0);
+            transferMotor.setPower(0);
             leftHoodMotor.setPower(0);
             rightHoodMotor.setPower(0);
         }
@@ -96,7 +96,7 @@ public class NearRed extends LinearOpMode {
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         leftHoodMotor = hardwareMap.get(DcMotor.class, "leftHoodMotor");
         rightHoodMotor = hardwareMap.get(DcMotor.class, "rightHoodMotor");
-        transferServo = hardwareMap.get(CRServo.class, "transferServo");
+        transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
         axonPowerLeft = hardwareMap.get(Servo.class, "axonPowerLeft");
         axonPowerRight = hardwareMap.get(Servo.class, "axonPowerRight");
         leftEncoderServo = hardwareMap.get(AnalogInput.class, "leftServoEncoder");
@@ -105,10 +105,10 @@ public class NearRed extends LinearOpMode {
         axonPowerRight.setDirection(Servo.Direction.REVERSE);
 
 
-        double spinWait = 1.5; //TODO: Tune spinWait, change to 1 if needed
+        double spinWait = 0; //TODO: Tune spinWait, change to 1 if needed
         double intakeWait = 2.4; //TODO: Tune intakeWait
         double balltakeWait = 0;
-        double balltakeVelContraint = 35; // 80 = regular velocity
+        double balltakeVelContraint = 35; // 95 = regular velocity
 
         Pose2d initialPose = new Pose2d(-50, 50, Math.toRadians(126));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
@@ -119,31 +119,34 @@ public class NearRed extends LinearOpMode {
 
         Action path = drive.actionBuilder(initialPose)
                 .stopAndAdd(new shooterOn())
-                .afterDisp(0, new InstantAction(() -> {
+                //TODO: Re-add afterDisp after servo zeroed
+                /*.afterDisp(0, new InstantAction(() -> {
                     axonPowerLeft.setPosition(0.55);
                     axonPowerRight.setPosition(0.55);
-                }))
+                })) */
                 .strafeTo(new Vector2d(-16, 13)) // go to shooting zone
               //  .afterDisp(0, new shooterOn())
                  //TODO: Tune wait for spin-up
-                .waitSeconds(0.75) // wait for spin-up
+                .waitSeconds(0) // wait for spin-up
                 .stopAndAdd(new SequentialAction (
                         new InstantAction(new intakeOn()),
                         //TODO: Tune intake time
                         new SleepAction(intakeWait), // Feed long enough to shoot
                         // STOP INTAKE & FLYWHEEL
-                        new InstantAction(new intakeOff()),
-                        new InstantAction(new shooterOff())
+                        new InstantAction(new intakeOff())
+                        //TODO: Turn back on if needed
+                      //  ,new InstantAction(new shooterOff())
                 ))
 
                 .strafeToLinearHeading(new Vector2d(-3, 15), Math.toRadians(88))
-                .waitSeconds(balltakeWait)// travel to the front of 1st row of artifacts
+               // .waitSeconds(balltakeWait) // travel to the front of 1st row of artifacts
                 .afterDisp(0, new balltakeOn()) // turn on intake
                 .strafeTo(new Vector2d(-3, 57), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake
                 .strafeToLinearHeading(new Vector2d(-16, 13), Math.toRadians(137)) // travel to shooting zone
 
-                .afterDisp(0, new shooterOn())
+                //TODO: Turn back on if needed
+              //  .afterDisp(0, new shooterOn())
                 //TODO: Tune wait for spin-up
                 .waitSeconds(spinWait) // wait for spin-up
                 .stopAndAdd(new SequentialAction (
@@ -151,12 +154,14 @@ public class NearRed extends LinearOpMode {
                         //TODO: Tune intake time
                         new SleepAction(intakeWait), // Feed long enough to shoot
                         // STOP INTAKE & FLYWHEEL
-                        new InstantAction(new intakeOff()),
-                        new InstantAction(new shooterOff())
+                        new InstantAction(new intakeOff())
+                        //TODO: Turn back on if needed
+                       // , new InstantAction(new shooterOff())
                 ))
 
                 .strafeToLinearHeading(new Vector2d(27.5, 12.8), Math.toRadians(87.5))
-                .waitSeconds(balltakeWait)
+                //TODO: Turn back on if needed
+              //  .waitSeconds(balltakeWait)
                 .afterDisp(0, new balltakeOn()) // turn on intake
                 .strafeTo(new Vector2d(26, 53.5), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake

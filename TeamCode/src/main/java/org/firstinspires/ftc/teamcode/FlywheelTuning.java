@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystem.util.PIDFController;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 /*
 
@@ -40,6 +41,11 @@ public class FlywheelTuning extends OpMode {
     private DcMotorEx leftShooterMotor, rightShooterMotor;
     public static double targetVelocity, encoderVelocity, velocity;
     public static double P, I , kV, kA , kS;
+
+    double voltageControllerWasTunedAt = 12.3; //TODO: Change later when tuning
+    private VoltageSensor voltageSensor;
+    double power;
+
     @Override
     public void init() {
         //TODO: Set motor name and direction
@@ -48,6 +54,7 @@ public class FlywheelTuning extends OpMode {
         encoder = (DcMotorEx) hardwareMap.get(DcMotor.class, "leftHoodMotor");
         leftShooterMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "leftHoodMotor"); // change directions if needed
         rightShooterMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "rightHoodMotor"); // change directions if needed
+        voltageSensor = hardwareMap.voltageSensor.get("Control Hub");
 
         encoder.setDirection(DcMotorSimple.Direction.FORWARD);
         leftShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -63,12 +70,16 @@ public class FlywheelTuning extends OpMode {
 
         telemetry.addLine("==========");
 
+        double currentSystemVoltage = voltageSensor.getVoltage();
+
         controller.setPIDF(P, I, 0.0, 0);
         controller.setFeedforward(kV, 0, kS);
 
         velocity = encoder.getVelocity();
 
-        leftShooterMotor.setPower(controller.calculate((targetVelocity - velocity), targetVelocity, 0));
-        rightShooterMotor.setPower(controller.calculate((targetVelocity - velocity), targetVelocity, 0));
+        power = (controller.calculate((targetVelocity - velocity), targetVelocity, 0)) * (voltageControllerWasTunedAt / currentSystemVoltage);
+
+        leftShooterMotor.setPower(power);
+        rightShooterMotor.setPower(power);
     }
 }

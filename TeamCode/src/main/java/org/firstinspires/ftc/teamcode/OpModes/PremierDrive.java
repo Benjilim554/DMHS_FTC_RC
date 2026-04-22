@@ -1,14 +1,13 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.acmerobotics.roadrunner.Pose2d;
-import com.bylazar.field.CanvasRotation;
-import com.bylazar.panels.Panels;
+
+import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystem.util.PIDFController;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -22,9 +21,23 @@ public class PremierDrive extends LinearOpMode {
 
     private HoodLookupTable hoodLookup;
     private TelemetryManager robotTelemetry;
+
+    private PIDFController flywheelController;
+
+    public static double P = 0.0;
+    public static double I = 0.0;
+    public static double D = 0.0;
+    public static double F = 0.0;
+
+    public static double kV = 0.0;
+    public static double kA = 0.0;
+    public static double kS = 0.0;
+
+    public static double TARGET_VELOCITY = 1200.0;
+
     MecanumDrive drive;
     DcMotor encoder;
-    CRServo transferServo;
+    DcMotor transferMotor;
     DcMotor rightFrontMotor, rightBackMotor, leftBackMotor, leftFrontMotor;
     DcMotor leftHoodMotor, rightHoodMotor;
     DcMotor intakeMotor;
@@ -39,9 +52,11 @@ public class PremierDrive extends LinearOpMode {
         drive = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         HoodLookupTable hood = new HoodLookupTable();
 
+        flywheelController = new PIDFController(P, I, D, F, kV, kA, kS);
+        flywheelController.reset();
+
         robotTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-     //   robotTelemetry.setOffsets(72.0, 72.0, CanvasRotation.DEG_0);
 
         telemetry.addData("Stored X: ", PoseStorage.currentPose.position.x - 12);
         telemetry.addData("Stored Y: ", PoseStorage.currentPose.position.y);
@@ -50,7 +65,7 @@ public class PremierDrive extends LinearOpMode {
 
         FieldMath.Alliance alliance = FieldMath.Alliance.RED; //TODO: Change to Red/Blue
 
-        int SpeedFactor;
+        double SpeedFactor;
         double flyWheelAcceleration;
 
         axonPowerLeft = hardwareMap.get(Servo.class, "axonPowerLeft");
@@ -66,16 +81,18 @@ public class PremierDrive extends LinearOpMode {
 
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
 
-        transferServo = hardwareMap.get(CRServo.class, "transferServo");
+        transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
 
-        SpeedFactor = 1;
+        SpeedFactor = 1.0;
         flyWheelAcceleration = 0.06;
 
         axonPowerLeft.setDirection(Servo.Direction.FORWARD);
-        axonPowerRight.setDirection(Servo.Direction.FORWARD);
+        axonPowerRight.setDirection(Servo.Direction.REVERSE);
+
         rightFrontMotor.setDirection(DcMotor.Direction.REVERSE);
         rightBackMotor.setDirection(DcMotor.Direction.REVERSE);
         leftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
+
         leftHoodMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightHoodMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -91,11 +108,41 @@ public class PremierDrive extends LinearOpMode {
                         alliance
                 );
 
-                double leftPos = hood.getLeftServoPosition(distanceToDepot);
-                double rightPos = hood.getRightServoPosition(distanceToDepot);
+                double hoodPos = hood.getServoPosition(distanceToDepot);
 
-                axonPowerLeft.setPosition(leftPos);
-                axonPowerRight.setPosition(rightPos);
+                axonPowerLeft.setPosition(hoodPos);
+                axonPowerRight.setPosition(hoodPos);
+
+               // robotTelemetry.
+
+                /*
+                * // FIELD-CENTRIC DRIVE
+    double y = -gamepad1.left_stick_y;      // forward/back
+    double x = gamepad1.left_stick_x * 1.1; // strafe, with small correction
+    double rx = gamepad1.right_stick_x;     // rotation
+
+    //Use Road Runner / localizer heading
+    double botHeading = livePose.heading.toDouble();
+
+    // Rotate the joystick vector counter to robot heading
+    double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+    double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+
+    // Normalize so powers keep the same ratio
+    double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+
+    double frontLeftPower  = (rotY + rotX + rx) / denominator;
+    double backLeftPower   = (rotY - rotX + rx) / denominator;
+    double frontRightPower = (rotY - rotX - rx) / denominator;
+    double backRightPower  = (rotY + rotX - rx) / denominator;
+
+    leftFrontMotor.setPower(frontLeftPower * SpeedFactor);
+    leftBackMotor.setPower(backLeftPower * SpeedFactor);
+    rightFrontMotor.setPower(frontRightPower * SpeedFactor);
+    rightBackMotor.setPower(backRightPower * SpeedFactor);
+                *
+                * */
+
 
                 leftBackMotor.setPower(((-gamepad1.left_stick_y - gamepad1.left_stick_x) + gamepad1.right_stick_x) * SpeedFactor);
                 leftFrontMotor.setPower((-gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x) * SpeedFactor);
@@ -140,22 +187,21 @@ public class PremierDrive extends LinearOpMode {
                 }
 
                 if (gamepad1.square) {
-                    transferServo.setPower(1);
+                    transferMotor.setPower(1);
                 } else if (gamepad1.circle || gamepad2.a) {
-                    transferServo.setPower(-1);
+                    transferMotor.setPower(-1);
                 } else if (gamepad1.triangle) {
-                    transferServo.setPower(0.5);
+                    transferMotor.setPower(0.5);
                     intakeMotor.setPower(-1);
                 } else {
-                    transferServo.setPower(0);
+                    transferMotor.setPower(0);
                 }
 
                 REALFLYWHEELSPEED = Math.abs(((DcMotorEx) rightHoodMotor).getVelocity());
 
                 telemetry.addData("Flywheel Speed: ", REALFLYWHEELSPEED);
                 telemetry.addData("Distance to Depot: ", distanceToDepot);
-                telemetry.addData("Left Hood Servo Position: ", leftPos);
-                telemetry.addData("Right Hood Servo Position: ", rightPos);
+                telemetry.addData("Hood Servo Position: ", hoodPos);
                 telemetry.addData("Live X: ", livePose.position.x);
                 telemetry.addData("Live Y: ", livePose.position.y);
                 telemetry.addData("Live Heading: ", Math.toDegrees(livePose.heading.toDouble()));
