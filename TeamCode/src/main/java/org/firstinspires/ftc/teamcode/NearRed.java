@@ -67,6 +67,13 @@ public class NearRed extends LinearOpMode {
             rightHoodMotor.setPower(-0.1);
         }
     }
+    public class initialServoPos implements InstantFunction {
+        @Override
+        public void run() {
+            axonPowerLeft.setPosition(0.5);
+            axonPowerRight.setPosition(0.5);
+        }
+    }
     public class balltakeOff implements InstantFunction {
         @Override
         public void run() {
@@ -102,6 +109,7 @@ public class NearRed extends LinearOpMode {
         leftEncoderServo = hardwareMap.get(AnalogInput.class, "leftServoEncoder");
         rightEncoderServo = hardwareMap.get(AnalogInput.class, "rightServoEncoder");
 
+        axonPowerLeft.setDirection(Servo.Direction.FORWARD);
         axonPowerRight.setDirection(Servo.Direction.REVERSE);
 
 
@@ -119,11 +127,7 @@ public class NearRed extends LinearOpMode {
 
         Action path = drive.actionBuilder(initialPose)
                 .stopAndAdd(new shooterOn())
-                //TODO: Re-add afterDisp after servo zeroed
-                /*.afterDisp(0, new InstantAction(() -> {
-                    axonPowerLeft.setPosition(0.55);
-                    axonPowerRight.setPosition(0.55);
-                })) */
+                .afterDisp(0, new initialServoPos())
                 .strafeTo(new Vector2d(-16, 13)) // go to shooting zone
               //  .afterDisp(0, new shooterOn())
                  //TODO: Tune wait for spin-up
@@ -138,8 +142,8 @@ public class NearRed extends LinearOpMode {
                       //  ,new InstantAction(new shooterOff())
                 ))
 
-                .strafeToLinearHeading(new Vector2d(-3, 15), Math.toRadians(88))
-               // .waitSeconds(balltakeWait) // travel to the front of 1st row of artifacts
+                .strafeToLinearHeading(new Vector2d(-3, 15), Math.toRadians(88)) // travel to the front of 1st row of artifacts
+               // .waitSeconds(balltakeWait)
                 .afterDisp(0, new balltakeOn()) // turn on intake
                 .strafeTo(new Vector2d(-3, 57), new TranslationalVelConstraint(balltakeVelContraint)) // grab artifacts
                 .afterDisp(0, new balltakeOff()) // turn off intake

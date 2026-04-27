@@ -31,7 +31,7 @@ public class MeepMeepTesting {
                         .strafeToLinearHeading(new Vector2d(7, 30), Math.toRadians(45))
                 .build()); */
         // FAR ZONE VISUALIZER
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(61, -21, Math.toRadians(-180)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(61, 61, Math.toRadians(270)))
                 .strafeToLinearHeading(new Vector2d(52, -13.5), Math.toRadians(-152)) // begin pose
 
                .strafeToLinearHeading(new Vector2d(38, -16), Math.toRadians(-90))

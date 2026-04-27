@@ -19,15 +19,15 @@ public class HoodLookupTable {
         // Format: add(distance, servoPosition)
         servoLut.add(0.00, 1.00);
         servoLut.add(10.00, 1.00);
-        servoLut.add(20.00, 0.87);
-        servoLut.add(30.00, 0.82);
-        servoLut.add(40.00, 1.00); //TODO: Just testing (original 0.78)
-      //  servoLut.add(50.00, 0.74);
-        servoLut.add(60.00, 0.00); //TODO: Just testing (original 0.69)
-        servoLut.add(70.00, 0.65);
-        servoLut.add(80.00, 0.60);
-        servoLut.add(90.00, 0.50);
-        servoLut.add(100.00, 0.45);
+        servoLut.add(20.00, 0.76);
+        servoLut.add(30.00, 0.71);
+        servoLut.add(40.00, 0.67); //TODO: Just testing (original 0.78)
+        servoLut.add(50.00, 0.63);
+        servoLut.add(60.00, 0.58); //TODO: Just testing (original 0.69)
+        servoLut.add(70.00, 0.54);
+        servoLut.add(80.00, 0.49);
+        servoLut.add(90.00, 0.46);
+        servoLut.add(100.00, 0.40);
         servoLut.createLUT();
     }
 }
